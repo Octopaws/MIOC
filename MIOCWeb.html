@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP32 Control and Video</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80%;
+      margin-bottom: 40px;
+    }
+    .video-control {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .video-feed {
+      border: 1px solid #000;
+      width: 640px;
+      height: 480px;
+      margin-right: 20px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .pan-tilt-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .pan-tilt-buttons button {
+      width: 50px;
+      margin: 5px;
+    }
+    .lights, .security {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .light-controls, .security-controls {
+      width: 45%;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .light-controls {
+      background-color: #f4ff7a;
+    }
+    .security-controls {
+      background-color: #ff9469;
+    }
+    .light-controls button, .security-controls button {
+      width: 50%;
+      margin-top: 10px;
+    }
+    .light-controls input[type=range] {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .rgb-light-controls {
+      margin-top: 20px;
+    }
+    .footer {
+      width: 100%;
+      background-color: rgb(6, 6, 66);
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ESP32 Control and Video</h1>
+  <div class="container">
+    <div class="video-control">
+      <img id="videoFeed" class="video-feed" src="http://192.168.1.101:81/stream" alt="Loading video...">
+      <div class="pan-tilt-buttons">
+        <button onclick="moveServo('tilt', 'up')">Up</button>
+        <div>
+          <button onclick="moveServo('pan', 'left')">Left</button>
+          <button onclick="moveServo('pan', 'right')">Right</button>
+        </div>
+        <button onclick="moveServo('tilt', 'down')">Down</button>
+      </div>
+    </div>
+    <div class="lights">
+      <div class="control-group light-controls">
+        <h2>Lights</h2>
+        <button onclick="toggleLight(2)">Normal Light</button>
+        <button onclick="toggleLight(3)">Fancy Light</button>
+        <button onclick="toggleLight(4)">Low Light</button>
+        <div class="rgb-light-controls">
+          <h3>RGB Light</h3>
+          <input type="range" min="0" max="255" id="slider" oninput="updateSlider(this.value)">
+          <span id="sliderValue">128</span>
+        </div>
+      </div>
+      <div class="control-group security-controls">
+        <h2>Security</h2>
+        <button onclick="toggleRelay()">Lock/Unlock Door</button>
+        <div class="rgb-light-controls">
+          <h3>Fan Control</h3>
+          <input type="range" min="0" max="255" id="slider" oninput="updateSlider2(this.value)">
+          <span id="sliderValue2">128</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <h2>MIOC WEB</h2>
+    </div>
+  </div>
+
+  <script>
+    function toggleLight(light) {
+      fetch(`http://192.168.1.100/light${light}`)
+        .then(response => response.text())
+        .then(data => {
+          console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateSlider(value) {
+      document.getElementById('sliderValue').innerText = value;
+      fetch(`http://192.168.1.100/slider?value=${value}`)
+        .then(response => response.text())
+        .then(data => {
+          console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+
+    function updateSlider2(value) {
+      document.getElementById('sliderValue2').innerText = value;
+      fetch(`http://192.168.1.100/slider2?value=${value}`)
+        .then(response => response.text())
+        .then(data => {
+          console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+
+    function moveServo(servo, direction) {
+      fetch(`http://192.168.1.101/servo${capitalizeFirstLetter(servo)}?direction=${direction}`)
+        .then(response => response.text())
+        .then(data => {
+          console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function toggleRelay() {
+      fetch('http://192.168.1.100/relay')
+        .then(response => response.text())
+        .then(data => {
+          console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+  </script>
+</body>
+</html>
